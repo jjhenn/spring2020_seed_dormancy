@@ -1,7 +1,13 @@
 library(readxl)
 library(tidyverse)
+#install.packages ("tidyverse")
 
-data1 <- read_excel("G:/My Drive/Grad School/Projects/active/spring2020_seed_dormancy/data/germination_data.xlsx", sheet = 2, col_types = "text") %>% 
+
+#Installing germination data. It is in an excel sheet with 8 different tabs, one for each round of surveys, so we are importing them separately.
+
+#LML tried to modify code so it would work on my computer, but no such luck
+data1 <- read_excel("/Users/laura/Desktop/Desktop/Writing Projects/Seed dormancy/R/Spring 2020 Seed Dormancy/datagermination_data.xlsx", sheet = 2, col_types = "text") %>%
+#data1 <- read_excel("G:/My Drive/Grad School/Projects/active/spring2020_seed_dormancy/data/germination_data.xlsx", sheet = 2, col_types = "text") %>% 
   pivot_longer(cols = c(6:(ncol(.)-1)), names_to = "date", values_to = "n_germ") %>% 
   mutate(date = as.Date(as.numeric(date), origin = "1899-12-30"),
          start_date = as.Date(as.numeric(start_date), origin = "1899-12-30")) %>% 
