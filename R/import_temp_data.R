@@ -29,12 +29,15 @@ temps2 <- temps2 %>%
 
 
 temps <- bind_rows(temps1, temps2) %>% 
-  left_join(treats)
+  left_join(treats) %>% 
+  mutate(site = factor(site, levels = c("Green Bay", "Madison", "Illinois")))
 
 write.csv(temps, file = "working/temps.csv", row.names = F)
 
 
-temps %>% filter(treatment != "air") %>% 
+temps %>% filter(treatment != "air") %>% filter(month(Time) < 4 | month(Time) > 10) %>% 
   ggplot(aes(x = Time, y = TempC, group = ID, color = treatment)) +
   geom_line() +
-  facet_wrap(~site, ncol = 1)
+  facet_wrap(~site, ncol = 1) +
+  theme(text = element_text(size = 14)) +
+  ylim(c(-10, 15))
