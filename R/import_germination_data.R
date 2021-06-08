@@ -58,4 +58,4 @@ data8 <- read_excel("data/germination_data.xlsx", sheet = 9, col_types = "text")
 
 comp_data <- bind_rows(data1, data2, data3, data4, data5, data6, data7, data8)
 
-
+write.csv(comp_data, file = "working/compiled_data.csv", row.names = F)
