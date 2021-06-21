@@ -3,6 +3,7 @@
 # Germination percentages through time at each site
 
 library(tidyverse)
+library(TDPanalysis)
 
 germ<-read.csv("working/compiled_data.csv") #import germ data
 treats <- read.csv("data/snowTreatment_ibuttons_seedDormancy.csv", sep = ";") #import trt data
@@ -41,22 +42,40 @@ germ_to_sum <- germ_to_sum %>%
   rename(site = site.x)
 
 germ_to_sum_mean <- germ_to_sum %>%
-  group_by(site, round, treatment) %>%
+  group_by(site, round, treatment) %>% #grouping to then calculate mean values
   summarize (sum_germ = mean(sum_germ))
 
+## ~*~*~*~*~*~*~*~*~*~*~*~*~
+## ~*~*~* BASIC GRAPHS ~*~*~
+## ~*~*~*~*~*~*~*~*~*~*~*~*~
 
-## BASIC GRAPH
+## Total Germination
 # panel of three graphs, one for each site, line graph, x = round, y = sum_germ, one line for trt
-tots <- ggplot(data = germ_to_sum, aes(x = round, y = sum_germ, group = treatment, color = treatment)) +
+neworder <- c("GB", "MA", "IL") #ordering sites from north to south
+
+tots <- ggplot(data = germ_to_sum,  
+               aes(x = round, y = sum_germ, group = treatment, color = treatment)) +
   #geom_line() +
   geom_point () +
   geom_point (data=germ_to_sum_mean,size = 4) + #adding means
   theme_classic() +
-  facet_wrap(vars(site), nrow =3)
+  #ylab ("Germaination count")
+  xlab("Collection Round") +
+  facet_wrap(vars(site = factor(site, levels = neworder)), nrow =3)
 tots
 
+## First germination
+
+germ_to$date2 <- gsub("-", "/", germ_to$date, fixed = TRUE)
+germ_to$doy <- date.to.DOY(germ_to$date2, format = "yyyy/mm/dd") #made a doy column
+
+# drop NA, then for each site/round/rep pick find the earliest DOY and the earliest NON ZERO doy and subtract to fine day to germination
 
 
-
-
+test <- germ_to %>%
+  drop_na() %>% #dropping missing data 
+  group_by(site, round, rep) %>%
+  mutate (min_doy =min(doy)) %>% #first day of planting/observations
+  mutate (filter(n_germ >0), min_germ_doy = min(doy)) # This is not working, Not sure what numbers it is getting
+ 
 
