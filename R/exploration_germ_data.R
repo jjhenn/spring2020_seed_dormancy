@@ -4,6 +4,8 @@
 
 library(tidyverse)
 library(TDPanalysis)
+library(ggplot2)
+library(gridExtra)
 
 germ<-read.csv("working/compiled_data.csv") #import germ data
 treats <- read.csv("data/snowTreatment_ibuttons_seedDormancy.csv", sep = ";") #import trt data
@@ -64,18 +66,47 @@ tots <- ggplot(data = germ_to_sum,
   facet_wrap(vars(site = factor(site, levels = neworder)), nrow =3)
 tots
 
+pdf("working/Germ_Totals.pdf", width = 6, height = 10)
+grid.arrange(tots)
+#grid.arrange(spring_summer, flwr_month, ncol = 2, widths = c(1, 2.5))
+dev.off()
+
+
 ## First germination
 
 germ_to$date2 <- gsub("-", "/", germ_to$date, fixed = TRUE)
 germ_to$doy <- date.to.DOY(germ_to$date2, format = "yyyy/mm/dd") #made a doy column
 
-# drop NA, then for each site/round/rep pick find the earliest DOY and the earliest NON ZERO doy and subtract to fine day to germination
-
-
-test <- germ_to %>%
+germ_timing <- germ_to %>%
   drop_na() %>% #dropping missing data 
   group_by(site, round, rep) %>%
   mutate (min_doy =min(doy)) %>% #first day of planting/observations
-  mutate (filter(n_germ >0), min_germ_doy = min(doy)) # This is not working, Not sure what numbers it is getting
- 
+  filter (n_germ >0) %>% #filtering out zero germ days so I can find first day of germiation
+  mutate (min_germ_doy = min(doy)) %>%
+  mutate(days_to_germ = min_germ_doy - min_doy) %>%
+  select (-c(date, date2, doy, siterep, n_germ))
+
+germ_timing <- germ_timing[!duplicated(germ_timing), ] #removing duplicate rows
+
+
+germ_timing_mean <- germ_timing %>%
+  group_by(site, round, treatment) %>% #grouping to then calculate mean values
+  summarize (mean_time = mean(days_to_germ))
+germ_timing_mean$days_to_germ <- germ_timing_mean$mean_time
+  
+gtime <- ggplot(data = germ_timing,  
+               aes(x = round, y = days_to_germ, group = treatment, color = treatment)) +
+  #geom_line() +
+  geom_point () +
+  geom_point (data=germ_timing_mean, size = 4) + #adding means but code not working
+  #geom_jitter() +
+  theme_classic() +
+  #ylab ("Days til first germination") +
+  xlab("Collection Round") +
+  facet_wrap(vars(site = factor(site, levels = neworder)), nrow =3)
+gtime
+
+pdf("working/First_germ.pdf", width = 6, height = 10)
+grid.arrange(gtime)
+dev.off()
 
