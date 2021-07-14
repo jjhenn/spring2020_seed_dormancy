@@ -1,3 +1,6 @@
+#Seed dormancy, winter 2019/2020 field experiment in Madison (Biocore Prairie), Charleston IL and Green Bay WI (UWGB)
+# Note: Week 1-4 were grown in the growth chamber on campus, Week 5-end were grown in Laura's livingroom due to the pandemic. Unavoidable differences in methods might influence results
+
 # to do: 
 #Compare germaintion percentages in snow removal and control plots
 # Germination percentages through time at each site
@@ -41,11 +44,12 @@ germ_to_sum <- left_join(germ_to_sum, treats, by = "siterep") #adding trt to ger
 
 germ_to_sum <- germ_to_sum %>% 
   select (-c(site_long, date_deploy, ID, notes, site.y, plot)) %>% #getting rid of extra columns
-  rename(site = site.x)
+  rename(site = site.x) %>%
+  mutate(perc_germ = (sum_germ/50)*100) # making percent germiantion variable for graphing
 
 germ_to_sum_mean <- germ_to_sum %>%
   group_by(site, round, treatment) %>% #grouping to then calculate mean values
-  summarize (sum_germ = mean(sum_germ))
+  summarize (sum_germ = mean(sum_germ), perc_germ = mean(perc_germ)) 
 
 ## ~*~*~*~*~*~*~*~*~*~*~*~*~
 ## ~*~*~* BASIC GRAPHS ~*~*~
@@ -70,6 +74,24 @@ pdf("working/Germ_Totals.pdf", width = 6, height = 10)
 grid.arrange(tots)
 #grid.arrange(spring_summer, flwr_month, ncol = 2, widths = c(1, 2.5))
 dev.off()
+
+
+# total germination percentages
+tots_perc <- ggplot(data = germ_to_sum,  
+               aes(x = round, y = perc_germ, group = treatment, color = treatment)) +
+  #geom_line() +
+  geom_point () +
+  geom_point (data=germ_to_sum_mean,size = 4) + #adding means
+  theme_classic() +
+  #ylab ("Germaination count")
+  xlab("Collection Round") +
+  facet_wrap(vars(site = factor(site, levels = neworder)), nrow =3)
+tots_perc
+
+pdf("working/Germ_Totals_Percentages.pdf", width = 6, height = 10)
+grid.arrange(tots_perc)
+dev.off()
+
 
 
 ## First germination
